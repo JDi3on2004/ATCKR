@@ -122,6 +122,25 @@ const SCENARIOS = [
     safePoints: []
   },
 
+
+{
+    sender: 'Work 😒 ',
+    ava: '💼',
+    num: 'Work contact',
+    msgs: [
+      { text: "Hey, John called out sick could you come into work today? We could use the help.", time: '12:30 PM', bad: false },
+    ],
+    isTrap: false,
+    explanation: "Your work contact texting you to come into work today is definitely not a scam. They are a verified number on your phone.",
+    flags: [],
+    safePoints: [
+      '✅ Saved contact — a manager',
+      '✅ No links or attachments',
+      '✅ Normal, free-flowing conversation',
+      '✅ Request comes from a verified number',
+    ]
+  },
+
   {
     sender: 'ClassmateMia',
     ava: '🧑',
@@ -139,6 +158,24 @@ const SCENARIOS = [
       '✅ Normal friendly conversation',
       '✅ No pressure or urgency at all'
     ]
+  },
+
+  { 
+    sender: 'FREE ROBUX',
+    ava: '🎭',
+    num: '+1 (643) 245-3532',
+    msgs: [
+      {text: 'DO YOU WANT FREE ROBUX? Click on the link below to try this new method for collecting robux in-game:', time: '5:35 PM', bad: true},
+      {text: 'http://www.robl0xfree.net/robuxgenerator -- please enter your username, password and bank details to get a $100 deposit and 900 robux', time: '5:35 PM', bad: true},
+    ],
+    isTrap: true,
+    explanation: "It's a growing trend to get free robux nowadays, and just like the Minecraft Diamonds Generator it's asking for personal information! It is also important to never share bank details as that can be easily stolen!",
+    flags: [
+      '🔑 Once again asks for a username and password, and bank details',
+      '🔗 Sketchy URL',
+      '💰 Promises of depositing money without verification',
+      '❓ Suspicious number'],
+    safePoints: [],
   },
 
   {
