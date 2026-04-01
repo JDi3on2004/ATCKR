@@ -28,6 +28,11 @@ main{
     background-repeat: no-repeat;
 
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px 40px;
 }
 
 .container {
@@ -74,12 +79,66 @@ nav a:hover {
     color: #52d63a;
 }
 
-/* start button */
+/* hero page */
 
+.hero {
+    text-align: center;
+    animation: fadeUp 1s ease forwards;
+    margin-bottom: 10px;
+}
+
+.hero-title {
+    font-size: clamp(1.6rem, 4vw, 2.6rem);
+    color: #52d63a;
+    line-height: 1.4;
+    margin-bottom: 12px;
+    text-shadow: 0 0 14px rgba(82, 214, 58, 0.5);
+}
+
+.hero-tagline {
+    font-size: 0.95rem;
+    color: rgba(0, 255, 0, 0.65);
+    margin-bottom: 22px;
+    letter-spacing: 0.04em;
+}
+
+/* Terminal typing line */
+.terminal {
+    display: inline-block;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid #526d3a;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 0.88rem;
+    color: #00ff00;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+}
+
+.terminal-prompt {
+    color: #52d63a;
+    font-weight: bold;
+}
+
+/* Blinking cursor */
+.cursor {
+    display: inline-block;
+    animation: blink 0.75s step-start infinite;
+    color: #52d63a;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+}
+
+/* -----------------------------------------------
+   START BUTTON
+----------------------------------------------- */
 .start-cont {
     text-align: center;
-    margin-bottom: 80px;
-    margin-top: 0px;
+    margin-bottom: 60px;
+    margin-top: 28px;
     animation: fadeUp 1s ease forwards;
 }
 
@@ -87,15 +146,28 @@ nav a:hover {
     background-color: #52d63a;
     color: white;
     border: none;
-   padding: 18px 60px;
+    display: inline-block;
+    padding: 18px 40px;
+    width: fit-content;
     font-size: 1.6rem;
     font-family: "Share Tech Mono", monospace;
     border-radius: 8px;
     cursor: pointer;
+    text-decoration: none;
 
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
+    /* Glowing pulse animation */
+    animation: glowPulse 2s ease-in-out infinite;
+}
+
+.start:hover {
+    filter: brightness(1.15);
+    transform: scale(1.04);
+    transition: transform 0.18s, filter 0.18s;
+}
+
+@keyframes glowPulse {
+    0%,  100% { box-shadow: 0 0 8px  rgba(82, 214, 58, 0.5); }
+    50%        { box-shadow: 0 0 28px rgba(82, 214, 58, 0.95); }
 }
 /* navigation section (usage of transitions/animations here) */
 nav.site-navigation {
@@ -155,7 +227,7 @@ p.skip-navigation a:focus {
     justify-content: center;
     align-items: flex-start;
     gap: 30px;
-    margin-top: 90px;
+    margin-top: 20px;
     animation: fadeUp 1s ease 0.4s forwards;
     opacity: 0;
 }
@@ -226,7 +298,7 @@ p.skip-navigation a:focus {
         gap: 1em;
     }
     
-    *nav {
+    nav {
         display: none;
     }
 }
