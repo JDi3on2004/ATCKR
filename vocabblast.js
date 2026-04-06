@@ -312,7 +312,7 @@ function loadNextWord() {
       x:         spacing * (i + 1),
       y:         -80 - i * 45,           // staggered start positions
       xDraw:     spacing * (i + 1),
-      speed:     28 + G.round * 5,       // faster each round
+      speed:     28 + G.round * 2.5,       // faster each round
       wobble:    Math.random() * Math.PI * 2,
       wobbleSpd: 0.7 + Math.random() * 0.6,
       alive:     true
@@ -502,7 +502,7 @@ function draw() {
 
     // Glow halo
     const grd = ctx.createRadialGradient(vx, v.y, 0, vx, v.y, 50);
-    grd.addColorStop(0, v.isCorrect ? 'rgba(57,255,20,0.13)' : 'rgba(255,71,87,0.1)');
+    grd.addColorStop(0, 'rgba(0,229,255,0.12)');
     grd.addColorStop(1, 'transparent');
     ctx.fillStyle = grd;
     ctx.beginPath(); ctx.arc(vx, v.y, 50, 0, Math.PI * 2); ctx.fill();
@@ -550,13 +550,13 @@ function drawBubble(cx, topY, text, isCorrect) {
   const bh    = lines.length * lh + pad * 2;
   const bw    = maxW + pad * 2;
 
-  ctx.fillStyle   = isCorrect ? 'rgba(10,35,10,0.88)' : 'rgba(35,10,15,0.88)';
-  ctx.strokeStyle = isCorrect ? 'rgba(57,255,20,0.45)' : 'rgba(255,71,87,0.3)';
+  ctx.fillStyle   =  'rgba(10,20,35,0.9)' ;
+  ctx.strokeStyle = 'rgba(0,299,255,0.4)' ;
   ctx.lineWidth   = 1;
   rr(cx - bw / 2, topY, bw, bh, 8);
   ctx.fill(); ctx.stroke();
 
-  ctx.fillStyle    = isCorrect ? '#b8ffb0' : '#ffb0b8';
+  ctx.fillStyle    =  '#e2e8f0';
   ctx.font         = '600 0.6rem Nunito, sans-serif';
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'top';
