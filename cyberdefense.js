@@ -10,151 +10,155 @@
 
 /* -------------------------------------------------------
    GAME STATE
-   Tracks everything about the current playthrough.
-   Mirrors the G object pattern from game1.js.
-------------------------------------------------------- */
+----------------------------------------------- */
 const G = {
-  score:      0,       // total points earned
-  lives:      15,      // remaining lives (enemies reaching end)
-  gold:       100,     // currency for placing towers
-  wave:       0,       // current wave number
-  totalWaves: 5,       // total waves in the game
-  streak:     0,       // current kill streak
-  best:       0,       // best kill streak this game
-  kills:      0,       // total enemies defeated
-  bonus:      0,       // total bonus gold earned from streaks
-  towers:     [],      // placed tower objects
-  enemies:    [],      // active enemy objects
-  projectiles:[],      // active projectile objects
-  particles:  [],      // active particle objects
-  selectedType: null,  // tower type selected in sidebar
-  selectedTower: null, // tower object clicked on map
-  waveActive: false,   // is a wave currently spawning/running
-  spawnQueue: [],      // enemy types queued to spawn
-  spawnTimer: 0,       // countdown between spawns
-  answered:   false    // repurposed: prevents actions during overlay
+  score:      0,
+  lives:      20,       // #3 — 20 lives
+  gold:       100,
+  wave:       0,
+  totalWaves: 5,
+  streak:     0,
+  best:       0,
+  kills:      0,
+  bonus:      0,
+  towers:     [],
+  enemies:    [],
+  projectiles:[],
+  particles:  [],
+  selectedType:  null,
+  selectedTower: null,
+  waveActive: false,
+  spawnQueue: [],
+  spawnTimer: 0,
+  answered:   false
 };
 
 
 /* -------------------------------------------------------
    TOWER DEFINITIONS
-   targets[] defines which enemy types each tower can hit:
-     firewall  → worm, phishing
-     antivirus → spyware only
-     updater   → worm, spyware
-     vpn       → ransomware only
-------------------------------------------------------- */
+   #2 — Targeting rules:
+     firewall  → worm, phishing          (all 4 hit worm/phishing)
+     antivirus → worm, phishing, spyware (hits spyware too)
+     updater   → worm, phishing, spyware (hits spyware too)
+     vpn       → worm, phishing, ransomware (only one for ransomware)
+----------------------------------------------- */
 const TOWERS = {
   firewall: {
     key:     'firewall',
     emoji:   '🧱',
     name:    'Firewall',
     cost:    30,
-    dmg:     20,
-    range:   2.5,   // in grid cells
-    rate:    1.5,   // shots per second
-    color:   '#060606',
+    dmg:     18,
+    range:   2.5,
+    rate:    1.5,
+    color:   '#00e5ff',
     targets: ['worm', 'phishing'],
-    desc:    'Hits: 🐛 Worm · 🎣 Phishing',
-    fact:    'A firewall is like a security guard that checks every visitor on its travels to the computer.'
+    desc:    'Hits Worms & Phishing',
+    tooltip: 'Cost: 💰30 · Targets 🐛 Worm and 🎣 Phishing. Fast fire rate makes it great for early waves. Acts like a security guard blocking known threats.'
   },
   antivirus: {
     key:     'antivirus',
     emoji:   '🔍',
     name:    'Antivirus',
     cost:    45,
-    dmg:     40,
+    dmg:     35,
     range:   3.5,
-    rate:    0.7,
+    rate:    0.8,
     color:   '#39ff14',
-    targets: ['spyware'],            // only tower that hits spyware
-    desc:    'Hits: 🕵️ Spyware only',
-    fact:    'Antivirus software scans every file on your computer looking for malware hiding in disguise.'
+    targets: ['worm', 'phishing', 'spyware'],
+    desc:    'Hits Worms, Phishing & Spyware',
+    tooltip: 'Cost: 💰45 · Targets 🐛 Worm, 🎣 Phishing, and 🕵️ Spyware. One of only two towers that can detect invisible Spyware. High damage per shot.'
   },
   updater: {
     key:     'updater',
     emoji:   '🔄',
     name:    'Updater',
     cost:    50,
-    dmg:     12,
-    range:   2.2,
-    rate:    0.9,
-    slow:    0.55,   // fraction of speed enemy keeps when slowed
+    dmg:     15,
+    range:   2.8,
+    rate:    1.0,
+    slow:    0.55,
     color:   '#ffd32a',
-    targets: ['worm', 'spyware'],
-    desc:    'Hits: 🐛 Worm · 🕵️ Spyware',
-    fact:    'Software updates patch security holes — outdated software is the most common way hackers get in!'
+    targets: ['worm', 'phishing', 'spyware'],
+    desc:    'Hits Worms, Phishing & Spyware — slows enemies',
+    tooltip: 'Cost: 💰50 · Targets 🐛 Worm, 🎣 Phishing, and 🕵️ Spyware. Slows enemies it hits. Patching software closes the holes Spyware sneaks through!'
   },
   vpn: {
     key:     'vpn',
     emoji:   '🔐',
     name:    'VPN Shield',
     cost:    90,
-    dmg:     28,
+    dmg:     40,
     range:   3.0,
     rate:    0.6,
     aoe:     true,
     color:   '#a55eea',
-    targets: ['ransomware'],         // only tower that hits ransomware
-    desc:    'Hits: 🔒 Ransomware only',
-    fact:    'A VPN encrypts your internet traffic like an invisible tunnel so hackers can\'t snoop on you.'
+    targets: ['worm', 'phishing', 'ransomware'],
+    desc:    'Hits Worms, Phishing & Ransomware (AOE)',
+    tooltip: 'Cost: 💰90 · Targets 🐛 Worm, 🎣 Phishing, and 🔒 Ransomware. The ONLY tower that can damage Ransomware. AOE blast hits all enemies in range at once!'
   }
 };
 
 
 /* -------------------------------------------------------
    ENEMY DEFINITIONS
-   Each enemy type maps to a real malware category
-   with child-friendly descriptions and cyber facts.
-------------------------------------------------------- */
+   #1 — Only spyware is stealthy (invisible flicker).
+   #6 — Worm and Phishing share similar mid-range speed.
+        Spyware is slower. Ransomware is slowest.
+   #3 — Max HP is 150 for the HP bar reference.
+----------------------------------------------- */
 const ENEMIES = {
   worm: {
     key:      'worm',
     emoji:    '🐛',
     name:     'Worm',
-    hp:       60,
-    speed:    1.9,
-    reward:   10,
-    damage:   1,    // lives lost when it reaches the computer
+    hp:       50,
+    speed:    1.4,    // #6 — mid speed (not fastest anymore)
+    reward:   8,
+    damage:   1,
     color:    '#ff6b35',
-    stealthy: false,
-    fact:     'A worm copies itself automatically and spreads to other computers over the internet!'
+    stealthy: false,  // #1 — never invisible
+    size:     0.42,
+    fact:     'A worm copies itself automatically and spreads to other computers!'
+  },
+  phishing: {
+    key:      'phishing',
+    emoji:    '🎣',
+    name:     'Phishing',
+    hp:       80,
+    speed:    1.3,    // #6 — same ballpark as worm
+    reward:   15,
+    damage:   2,
+    color:    '#ffd32a',
+    stealthy: false,  // #1 — never invisible
+    size:     0.58,
+    fact:     'Phishing emails pretend to be from someone you trust to steal your passwords!'
   },
   spyware: {
     key:      'spyware',
     emoji:    '🕵️',
     name:     'Spyware',
-    hp:       80,
-    speed:    1.1,
-    reward:   18,
-    damage:   2,    // steals data silently — costs 2 lives
+    hp:       100,
+    speed:    0.9,    // slower than worm/phishing
+    reward:   22,
+    damage:   3,
     color:    '#a55eea',
-    stealthy: true,
+    stealthy: true,   // #1 — ONLY this one flickers/invisible
+    size:     0.60,
     fact:     'Spyware secretly watches everything you do and sends your passwords to hackers!'
   },
   ransomware: {
     key:      'ransomware',
     emoji:    '🔒',
     name:     'Ransomware',
-    hp:       220,
-    speed:    0.7,
-    reward:   30,
-    damage:   5,    // locks everything — costs 5 lives
+    hp:       150,    // #3 — max HP is 150
+    speed:    0.45,   // SLOWEST
+    reward:   35,
+    damage:   5,
     color:    '#ff4757',
-    stealthy: false,
+    stealthy: false,  // #1 — never invisible
+    size:     0.88,
     fact:     'Ransomware locks all your files and demands money. Always keep backups!'
-  },
-  phishing: {
-    key:      'phishing',
-    emoji:    '🎣',
-    name:     'Phishing',
-    hp:       110,
-    speed:    1.3,
-    reward:   22,
-    damage:   3,    // steals credentials — costs 3 lives
-    color:    '#ffd32a',
-    stealthy: false,
-    fact:     'Phishing emails pretend to be from someone you trust to steal your passwords!'
   }
 };
 
@@ -238,6 +242,29 @@ function resizeCanvas() {
   );
   OX = Math.floor((canvas.width  - CELL * GRID_COLS) / 2);
   OY = Math.floor((canvas.height - CELL * GRID_ROWS) / 2);
+
+  // Re-snap all active enemies to their current path node using
+  // the new CELL/OX/OY values — without this, stored pixel positions
+  // become stale after resize and enemies fly off the path.
+  if (G && G.enemies) {
+    G.enemies.forEach(e => {
+      const node = PATH[e.pathIdx];
+      if (node) {
+        const pos = cellPx(node.x, node.y);
+        e.x = pos.px;
+        e.y = pos.py;
+      }
+    });
+  }
+
+  // Re-snap all placed tower pixel positions too
+  if (G && G.towers) {
+    G.towers.forEach(t => {
+      const pos = cellPx(t.x, t.y);
+      t.px = pos.px;
+      t.py = pos.py;
+    });
+  }
 }
 
 function cellPx(cx, cy) {
@@ -391,6 +418,7 @@ function startGame() {
     loopId++;
     const myId = loopId;
     updateHUD();
+    updateSellBtn();
     sendWave();
     requestAnimationFrame(ts => gameLoop(ts, myId));
   }));
@@ -402,22 +430,204 @@ function startGame() {
    Called by the "Send Wave" button.
    Queues up enemies and marks the wave as active.
 ------------------------------------------------------- */
-function sendWave() {
+/* -------------------------------------------------------
+   WAVE INTRO DATA
+   One entry per wave — lists every enemy type appearing
+   in that wave so kids know what's coming before it starts.
+------------------------------------------------------- */
+const WAVE_INTROS = [
+  {
+    wave:    1,
+    title:   '🌊 Wave 1 — The Worms Arrive!',
+    enemies: [
+      { emoji: '🐛', name: 'Worm', desc: 'Copies itself and spreads fast across your network. The good news? All 4 towers can stop it!' }
+    ]
+  },
+  {
+    wave:    2,
+    title:   '🌊 Wave 2 — Spyware Sneaks In!',
+    enemies: [
+      { emoji: '🐛', name: 'Worm',    desc: 'Still here and spreading fast! Any tower takes it down.' },
+      { emoji: '🕵️', name: 'Spyware', desc: 'Watch out — it\'s invisible to Firewalls! Only the 🔍 Antivirus or 🔄 Updater can detect it.' }
+    ]
+  },
+  {
+    wave:    3,
+    title:   '🌊 Wave 3 — Phishing Attacks!',
+    enemies: [
+      { emoji: '🐛', name: 'Worm',     desc: 'Fast and relentless — any tower handles it.' },
+      { emoji: '🕵️', name: 'Spyware',  desc: 'Still sneaking around! Only 🔍 Antivirus or 🔄 Updater can see it.' },
+      { emoji: '🎣', name: 'Phishing', desc: 'Sends fake messages to trick you into giving up your password. All 4 towers can fight it!' }
+    ]
+  },
+  {
+    wave:    4,
+    title:   '🌊 Wave 4 — Ransomware Strikes!',
+    enemies: [
+      { emoji: '🐛', name: 'Worm',       desc: 'Keeps coming — any tower stops it.' },
+      { emoji: '🕵️', name: 'Spyware',    desc: 'Invisible to most! Only 🔍 Antivirus or 🔄 Updater can catch it.' },
+      { emoji: '🎣', name: 'Phishing',   desc: 'Fake messages incoming! Any tower can handle it.' },
+      { emoji: '🔒', name: 'Ransomware', desc: 'The big one! Slow but deadly — it locks ALL your files. Only the 🔐 VPN Shield can defeat it. Place one NOW!' }
+    ]
+  },
+  {
+    wave:    5,
+    title:   '🌊 Wave 5 — FINAL ATTACK! Everything at Once!',
+    enemies: [
+      { emoji: '🐛', name: 'Worm',       desc: 'Swarming in numbers — any tower stops it.' },
+      { emoji: '🕵️', name: 'Spyware',    desc: 'Sneaking through your defenses! Use 🔍 Antivirus or 🔄 Updater.' },
+      { emoji: '🎣', name: 'Phishing',   desc: 'Flooding in with fake messages — any tower fights back.' },
+      { emoji: '🔒', name: 'Ransomware', desc: 'Multiple Ransomwares incoming! You NEED 🔐 VPN Shields placed — it\'s the only thing that can stop them!' }
+    ]
+  }
+];
+
+
+/* -------------------------------------------------------
+   WAVE INTRO CARD
+   Shows a centred popup card before each wave listing
+   every enemy type and how to beat them.
+   Counts down from 5 then auto-dismisses.
+   Returns a Promise so sendWave() can await it.
+------------------------------------------------------- */
+function showWaveIntro(waveNum) {
+  return new Promise(resolve => {
+    // Clear any existing toast so nothing overlaps
+    if (_activeToast)      { _activeToast.remove();              _activeToast      = null; }
+    if (_activeToastTimer) { clearTimeout(_activeToastTimer);    _activeToastTimer = null; }
+
+    const data = WAVE_INTROS[waveNum - 1];
+    if (!data) { resolve(); return; }
+
+    const card = document.createElement('div');
+    card.id = 'waveIntroCard';
+    card.style.cssText = [
+      'position:fixed',
+      'top:50%', 'left:50%',
+      'transform:translate(-50%,-50%)',
+      'background:#0f2235',
+      'border:2px solid rgba(0,229,255,0.5)',
+      'border-radius:16px',
+      'padding:22px 26px',
+      'z-index:700',
+      'max-width:400px',
+      'width:90%',
+      'text-align:center',
+      'box-shadow:0 0 40px rgba(0,229,255,0.2)',
+      'animation:chipPop 0.35s cubic-bezier(0.34,1.56,0.64,1)'
+    ].join(';');
+
+    // Title
+    const title = document.createElement('div');
+    title.style.cssText = 'font-family:"Fredoka One",cursive;font-size:1.1rem;color:#00e5ff;margin-bottom:14px;text-shadow:0 0 10px rgba(0,229,255,0.5);';
+    title.textContent   = data.title;
+    card.appendChild(title);
+
+    // Enemy rows
+    data.enemies.forEach(e => {
+      const row = document.createElement('div');
+      row.style.cssText = [
+        'display:flex', 'align-items:flex-start', 'gap:10px',
+        'background:rgba(0,0,0,0.3)',
+        'border:1px solid rgba(0,229,255,0.15)',
+        'border-radius:10px',
+        'padding:9px 12px',
+        'margin-bottom:8px',
+        'text-align:left'
+      ].join(';');
+      row.innerHTML =
+        '<span style="font-size:1.4rem;flex-shrink:0">' + e.emoji + '</span>' +
+        '<div>' +
+          '<div style="font-weight:800;font-size:0.8rem;color:#fff;margin-bottom:2px;">' + e.name + '</div>' +
+          '<div style="font-size:0.7rem;color:rgba(255,255,255,0.6);line-height:1.4;">' + e.desc + '</div>' +
+        '</div>';
+      card.appendChild(row);
+    });
+
+    // Countdown label
+    const countdown = document.createElement('div');
+    countdown.style.cssText = 'margin-top:12px;font-size:0.7rem;color:rgba(255,255,255,0.4);font-family:"Nunito",sans-serif;';
+    countdown.textContent   = 'Wave starts in 5…';
+    card.appendChild(countdown);
+
+    document.body.appendChild(card);
+
+    // Tick down from 4 → 1 then dismiss
+    let secs = 4;
+    const tick = setInterval(() => {
+      secs--;
+      if (secs > 0) {
+        countdown.textContent = 'Wave starts in ' + secs + '…';
+      } else {
+        clearInterval(tick);
+        card.style.transition = 'opacity 0.3s';
+        card.style.opacity    = '0';
+        setTimeout(() => { card.remove(); resolve(); }, 300);
+      }
+    }, 1000);
+  });
+}
+
+
+/* -------------------------------------------------------
+   SINGLETON TOAST
+   Clears any current toast before showing a new one
+   so tabs never stack on top of each other.
+------------------------------------------------------- */
+let _activeToast      = null;
+let _activeToastTimer = null;
+
+function showToast(message, duration = 3000) {
+  if (_activeToast)      { _activeToast.remove();           _activeToast      = null; }
+  if (_activeToastTimer) { clearTimeout(_activeToastTimer); _activeToastTimer = null; }
+
+  const toast = document.createElement('div');
+  toast.style.cssText = [
+    'position:fixed', 'bottom:100px', 'left:50%',
+    'transform:translateX(-50%)',
+    'background:#1e2d3d',
+    'border:0.5px solid rgba(6,182,212,0.4)',
+    'color:#e2e8f0', 'font-size:0.83rem', 'font-weight:800',
+    'padding:9px 18px', 'border-radius:20px',
+    'z-index:500',
+    'animation:chipPop 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+    'max-width:310px', 'text-align:center'
+  ].join(';');
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  _activeToast = toast;
+
+  _activeToastTimer = setTimeout(() => {
+    toast.remove();
+    _activeToast      = null;
+    _activeToastTimer = null;
+  }, duration);
+}
+
+
+/* -------------------------------------------------------
+   WAVE LAUNCHER
+   Shows the 5-second wave intro card first, then spawns.
+------------------------------------------------------- */
+async function sendWave() {
   if (G.waveActive || G.answered) return;
   if (G.wave >= G.totalWaves) return;
 
   G.wave++;
   document.getElementById('tdWave').textContent = G.wave + '/' + G.totalWaves;
+  updateHUD();
+  soundWave();
 
-  // Build spawn queue from wave definition (shuffled)
+  // Show intro card and wait for the 5-second countdown to finish
+  await showWaveIntro(G.wave);
+
+  // Build spawn queue after card dismisses
   const template = [...WAVES[G.wave - 1]];
   G.spawnQueue   = template.sort(() => Math.random() - 0.5);
   G.spawnTimer   = 0;
   G.waveActive   = true;
 
-  soundWave();
-  showToast(CYBER_FACTS[(G.wave - 1) % CYBER_FACTS.length]);
-  updateHUD();
+  showToast(CYBER_FACTS[(G.wave - 1) % CYBER_FACTS.length], 3000);
 }
 
 
@@ -479,6 +689,53 @@ function placeTower(cx, cy) {
   updateHUD();
 }
 
+
+/* -------------------------------------------------------
+   TOWER SELL
+   Refunds 60% of the tower's cost and removes it.
+   Called on second click of a selected tower, or via
+   the sidebar Sell Tower button.
+------------------------------------------------------- */
+function sellTower() {
+  if (!G.selectedTower) {
+    showToast('⚠️ Click a tower on the map first to select it, then sell!');
+    return;
+  }
+  const def    = TOWERS[G.selectedTower.type];
+  const refund = Math.floor(def.cost * 0.6);
+  G.gold      += refund;
+  G.towers     = G.towers.filter(t => t !== G.selectedTower);
+  G.selectedTower = null;
+  showToast('💸 Tower sold! +' + refund + ' gold');
+  updateHUD();
+  updateSellBtn();
+}
+
+
+/* -------------------------------------------------------
+   SELL BUTTON STATE
+   Updates the sidebar sell button to show which tower
+   is selected, or dims it when nothing is selected.
+------------------------------------------------------- */
+function updateSellBtn() {
+  const btn = document.getElementById('btnSell');
+  if (!btn) return;
+  if (G.selectedTower) {
+    const def    = TOWERS[G.selectedTower.type];
+    const refund = Math.floor(def.cost * 0.6);
+    btn.textContent      = '💸 Sell ' + def.emoji + ' (+' + refund + 'g)';
+    btn.style.opacity    = '1';
+    btn.style.background = '#ff4757';
+    btn.disabled         = false;
+  } else {
+    btn.textContent      = '💸 Sell Tower';
+    btn.style.opacity    = '0.45';
+    btn.style.background = '';
+    btn.disabled         = false;
+  }
+}
+
+
 /* -------------------------------------------------------
    ENEMY SPAWNING
    Creates a new enemy at the start of the PATH.
@@ -494,11 +751,12 @@ function spawnEnemy(type) {
     name:     def.name,
     hp:       def.hp,
     maxHp:    def.hp,
-    speed:    def.speed,        // cells per second
+    speed:    def.speed,
     reward:   def.reward,
-    damage:   def.damage,       // lives lost when it reaches the computer
+    damage:   def.damage,
     color:    def.color,
     stealthy: def.stealthy,
+    size:     def.size,      // emoji scale multiplier
     fact:     def.fact,
     slow:     0,
     slowTimer:0,
@@ -588,7 +846,7 @@ function gameLoop(timestamp, id) {
   // If a newer loop has started, this one exits
   if (id !== loopId) return;
 
-  const dt = Math.min((timestamp - (lastTime || timestamp)) / 1000, 0.05);
+  const dt = Math.min((timestamp - (lastTime || timestamp)) / 1000, 0.033);
   lastTime = timestamp;
 
   if (!G.answered) update(dt);
@@ -609,20 +867,21 @@ function update(dt) {
   // --- Wave complete check ---
   if (G.waveActive && G.spawnQueue.length === 0 && G.enemies.length === 0) {
     G.waveActive = false;
-    G.streak     = 0;            // reset streak between waves
+    G.streak     = 0;
     const bonus  = 25 + G.wave * 5;
     G.gold      += bonus;
     updateHUD();
-    showToast('🌊 Wave ' + G.wave + ' cleared! +' + bonus + ' gold bonus!');
+
+    // Show cleared toast first — wait for it to finish before next wave intro
+    showToast('🌊 Wave ' + G.wave + ' cleared! +' + bonus + ' gold bonus!', 2800);
 
     if (G.wave >= G.totalWaves) {
       setTimeout(endGame, 1200);
     } else {
+      // 3200ms lets the cleared toast fully display before the next wave card appears
       setTimeout(() => {
-        if (!G.waveActive && !G.answered) {
-          sendWave();
-        }
-      }, 500);
+        if (!G.waveActive && !G.answered) sendWave();
+      }, 3200);
     }
   }
 
@@ -660,6 +919,14 @@ function update(dt) {
       const dy   = tp.py - e.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
 
+      // Already sitting on this waypoint — snap and advance without consuming budget
+      if (dist < 0.5) {
+        e.x = tp.px;
+        e.y = tp.py;
+        e.pathIdx++;
+        continue;
+      }
+
       if (dist <= budget) {
         // Snap exactly onto waypoint and spend remainder on next segment
         e.x = tp.px;
@@ -675,6 +942,20 @@ function update(dt) {
     }
 
     if (leaked) continue;
+
+    // Safety clamp — if the enemy has drifted further than one full cell
+    // from its current path node (shouldn't happen, but catches edge cases),
+    // snap it back to the node centre so it can't visually leave the path.
+    const currentNode = PATH[e.pathIdx];
+    if (currentNode) {
+      const snap = cellPx(currentNode.x, currentNode.y);
+      const ddx  = e.x - snap.px;
+      const ddy  = e.y - snap.py;
+      if (Math.sqrt(ddx * ddx + ddy * ddy) > CELL * 1.5) {
+        e.x = snap.px;
+        e.y = snap.py;
+      }
+    }
   }
 
   // --- Towers shoot ---
@@ -859,21 +1140,76 @@ function draw() {
 
   // --- Enemies ---
   for (const e of G.enemies) {
-    ctx.globalAlpha = e.stealthy ? 0.5 : 1;
-    drawEmoji(e.emoji, e.x, e.y, CELL * 0.62);
-    ctx.globalAlpha = 1;
+    const emojiSize = CELL * (e.size || 0.62);
 
-    // HP bar
-    const bw = CELL * 0.78, bh = 4;
-    const bx = e.x - bw / 2, by = e.y + CELL * 0.37;
+    // Reset alpha and shadow for every enemy — prevents bleed between iterations
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur  = 0;
+
+    // #1 — ONLY spyware gets the stealth flicker + aura
+    if (e.stealthy) {
+      ctx.globalAlpha = 0.35 + Math.sin(Date.now() / 200) * 0.2;
+      const aura = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, CELL * 0.6);
+      aura.addColorStop(0, 'rgba(165,94,234,0.3)');
+      aura.addColorStop(1, 'transparent');
+      ctx.fillStyle = aura;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, CELL * 0.6, 0, Math.PI * 2);
+      ctx.fill();
+      // keep alpha low for the emoji render below
+    }
+
+    // Ransomware — red glow only, fully visible
+    if (e.type === 'ransomware') {
+      ctx.globalAlpha = 1;
+      ctx.shadowColor = '#ff4757';
+      ctx.shadowBlur  = 16;
+    }
+
+    // Worm — orange speed trail
+    if (e.type === 'worm') {
+      const savedAlpha = ctx.globalAlpha;
+      for (let t = 1; t <= 3; t++) {
+        const trailNode = PATH[Math.max(0, e.pathIdx - t)];
+        if (trailNode) {
+          const tp = cellPx(trailNode.x, trailNode.y);
+          ctx.globalAlpha = 0.2 / t;
+          ctx.fillStyle   = '#ff6b35';
+          ctx.beginPath();
+          ctx.arc(tp.px, tp.py, CELL * 0.1 * (1 - t * 0.2), 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.globalAlpha = savedAlpha;
+    }
+
+    drawEmoji(e.emoji, e.x, e.y, emojiSize);
+
+    // Always reset after drawing emoji
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur  = 0;
+
+    // HP bar — max 150 for ransomware, proportional for others (#3)
+    const bh  = e.type === 'ransomware' ? 6 : 4;
+    const bw  = CELL * (e.type === 'ransomware' ? 0.9 : 0.78);
+    const bx  = e.x - bw / 2;
+    const by  = e.y + emojiSize * 0.62;
+    const pct = Math.max(0, e.hp / e.maxHp);
     ctx.fillStyle = '#1a3a5c';
     ctx.fillRect(bx, by, bw, bh);
-    const pct = e.hp / e.maxHp;
     ctx.fillStyle = pct > 0.6 ? '#39ff14' : pct > 0.3 ? '#ffd32a' : '#ff4757';
     ctx.fillRect(bx, by, bw * pct, bh);
 
+    // Damage label
+    const dmgCol = { 1: '#aaaaaa', 2: '#ffd32a', 3: '#ff6b35', 5: '#ff4757' };
+    ctx.fillStyle    = dmgCol[e.damage] || '#fff';
+    ctx.font         = (CELL * 0.2) + 'px Nunito, sans-serif';
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('-' + e.damage + '❤️', e.x, e.y - emojiSize * 0.78);
+
     // Slow indicator
-    if (e.slowTimer > 0) drawEmoji('❄️', e.x + CELL * 0.32, e.y - CELL * 0.32, CELL * 0.28);
+    if (e.slowTimer > 0) drawEmoji('❄️', e.x + CELL * 0.36, e.y - CELL * 0.3, CELL * 0.28);
   }
 
   // --- Particles ---
@@ -916,22 +1252,146 @@ function initInput() {
 
   canvas.addEventListener('mouseleave', () => { hoverCell = null; });
 
+  // Touch support — treat touchstart as equivalent to click for placement
+  canvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const r     = canvas.getBoundingClientRect();
+    const mx    = (touch.clientX - r.left) * (canvas.width  / r.width);
+    const my    = (touch.clientY - r.top)  * (canvas.height / r.height);
+    hoverCell   = pxCell(mx, my);
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', e => {
+    e.preventDefault();
+    const touch = e.changedTouches[0];
+    const r     = canvas.getBoundingClientRect();
+    const mx    = (touch.clientX - r.left) * (canvas.width  / r.width);
+    const my    = (touch.clientY - r.top)  * (canvas.height / r.height);
+    const cell  = pxCell(mx, my);
+
+    const clicked = G.towers.find(t => t.x === cell.x && t.y === cell.y);
+    if (clicked) {
+      G.selectedType = null;
+      document.querySelectorAll('.td-card').forEach(c => c.classList.remove('selected'));
+      if (G.selectedTower === clicked) {
+        sellTower();
+      } else {
+        G.selectedTower = clicked;
+        updateSellBtn();
+      }
+      return;
+    }
+    if (G.selectedType) { placeTower(cell.x, cell.y); return; }
+    G.selectedTower = null;
+    updateSellBtn();
+  }, { passive: false });
+
   canvas.addEventListener('click', e => {
     const r    = canvas.getBoundingClientRect();
     const mx   = (e.clientX - r.left) * (canvas.width  / r.width);
     const my   = (e.clientY - r.top)  * (canvas.height / r.height);
     const cell = pxCell(mx, my);
 
+    const clicked = G.towers.find(t => t.x === cell.x && t.y === cell.y);
+
+    // Clicking an existing tower always takes priority —
+    // select it (and cancel placement mode) so the sell
+    // button in the sidebar immediately works
+    if (clicked) {
+      G.selectedType = null;
+      document.querySelectorAll('.td-card').forEach(c => c.classList.remove('selected'));
+      if (G.selectedTower === clicked) {
+        // Second click on the same tower — sell immediately
+        sellTower();
+      } else {
+        G.selectedTower = clicked;
+        updateSellBtn();
+      }
+      return;
+    }
+
+    // Clicked an empty cell while in placement mode — place a tower
     if (G.selectedType) {
       placeTower(cell.x, cell.y);
       return;
     }
 
-    // Select an existing tower
-    const clicked = G.towers.find(t => t.x === cell.x && t.y === cell.y);
-    G.selectedTower = clicked || null;
+    // Clicked empty cell with nothing selected — deselect
+    G.selectedTower = null;
+    updateSellBtn();
   });
-}
+
+  // Sidebar tower cards — body-level tooltip on hover/tap
+  // Tooltip is a single fixed div appended to body so it is never clipped
+  const _tip     = document.getElementById('td-tooltip');
+  const _tipData = {
+    'td-card-firewall':  { title: '🧱 Firewall',   body: 'Cost: 💰30 · Targets 🐛 Worm & 🎣 Phishing\nFast fire rate. Great for early waves. Blocks known threats before they spread.' },
+    'td-card-antivirus': { title: '🔍 Antivirus',  body: 'Cost: 💰45 · Targets 🐛 Worm, 🎣 Phishing & 🕵️ Spyware\nOne of only 2 towers that can see invisible Spyware. High damage per shot.' },
+    'td-card-updater':   { title: '🔄 Updater',    body: 'Cost: 💰50 · Targets 🐛 Worm, 🎣 Phishing & 🕵️ Spyware\nSlows ❄️ every enemy it hits. Also detects Spyware. Patch those security holes!' },
+    'td-card-vpn':       { title: '🔐 VPN Shield', body: 'Cost: 💰90 · Targets 🐛 Worm, 🎣 Phishing & 🔒 Ransomware\nAOE 💥 blast hits all enemies in range. The ONLY tower that stops Ransomware!' }
+  };
+
+  function showTip(cardEl, x, y) {
+    const data = _tipData[cardEl.id];
+    if (!data || !_tip) return;
+    _tip.innerHTML = '<strong>' + data.title + '</strong>' + data.body.replace(/\n/g, '<br>');
+    _tip.classList.add('visible');
+    // Position to the left of the sidebar on desktop, above on mobile
+    const sidebar  = document.getElementById('sidebar');
+    const sRect    = sidebar.getBoundingClientRect();
+    const tW       = 220, tH = _tip.offsetHeight || 120;
+    const isMobile = window.innerWidth <= 480;
+    let tx, ty;
+    if (isMobile) {
+      // sidebar is at bottom — show tooltip above the card
+      const cRect = cardEl.getBoundingClientRect();
+      tx = Math.max(4, Math.min(cRect.left + cRect.width / 2 - tW / 2, window.innerWidth - tW - 4));
+      ty = Math.max(4, cRect.top - tH - 10);
+    } else {
+      // sidebar is on the right — show tooltip to its left
+      tx = sRect.left - tW - 10;
+      const cRect = cardEl.getBoundingClientRect();
+      ty = Math.max(4, Math.min(cRect.top, window.innerHeight - tH - 4));
+    }
+    _tip.style.left = tx + 'px';
+    _tip.style.top  = ty + 'px';
+  }
+
+  function hideTip() {
+    if (_tip) _tip.classList.remove('visible');
+  }
+
+  document.querySelectorAll('.td-card').forEach(card => {
+    // Desktop hover
+    card.addEventListener('mouseenter', () => showTip(card));
+    card.addEventListener('mouseleave', hideTip);
+
+    // Mobile tap
+    card.addEventListener('touchstart', e => {
+      const allOpen = document.querySelectorAll('.td-card.tip-open');
+      if (allOpen.length && allOpen[0] !== card) {
+        allOpen.forEach(c => c.classList.remove('tip-open'));
+        hideTip();
+      }
+      if (card.classList.contains('tip-open')) {
+        card.classList.remove('tip-open');
+        hideTip();
+      } else {
+        card.classList.add('tip-open');
+        showTip(card);
+      }
+    }, { passive: true });
+  });
+
+  document.addEventListener('touchstart', e => {
+    if (!e.target.closest('.td-card') && !e.target.closest('#td-tooltip')) {
+      document.querySelectorAll('.td-card').forEach(c => c.classList.remove('tip-open'));
+      hideTip();
+    }
+  }, { passive: true });
+
+} // end initInput
 
 
 /* -------------------------------------------------------
@@ -948,11 +1408,11 @@ function updateHUD() {
   set('tdWave',  G.wave + '/' + G.totalWaves);
   set('tdKills', G.kills);
 
-  // Lives hearts
+  // Lives bar — max 20 lives (#3)
   const livesEl = document.getElementById('tdLivesBar');
   if (livesEl) {
     const pct = Math.max(0, G.lives / 20);
-    livesEl.style.width = (pct * 100) + '%';
+    livesEl.style.width      = (pct * 100) + '%';
     livesEl.style.background = pct > 0.5 ? '#39ff14' : pct > 0.25 ? '#ffd32a' : '#ff4757';
   }
 
@@ -981,29 +1441,6 @@ function showCombo(streak) {
   el.className    = 'combo';
   void el.offsetWidth;
   el.className    = 'combo go';
-}
-
-
-/* -------------------------------------------------------
-   TOAST NOTIFICATION
-   Identical implementation to game1.js showToast().
-------------------------------------------------------- */
-function showToast(message) {
-  const toast = document.createElement('div');
-  toast.style.cssText = [
-    'position:fixed','bottom:100px','left:50%',
-    'transform:translateX(-50%)',
-    'background:#1e2d3d',
-    'border:0.5px solid rgba(6,182,212,0.4)',
-    'color:#e2e8f0','font-size:0.83rem','font-weight:800',
-    'padding:9px 18px','border-radius:20px',
-    'z-index:500',
-    'animation:chipPop 0.3s cubic-bezier(0.34,1.56,0.64,1)',
-    'max-width:310px','text-align:center'
-  ].join(';');
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
 }
 
 
@@ -1087,7 +1524,7 @@ function endGame() {
 function goNext() {
   const passed = localStorage.getItem('game2_passed') === 'true';
   if (passed) {
-    window.location.href = 'vocabblast.html';
+    window.location.href = '../games/game3.html';
   } else {
     showToast('💡 Survive all 5 waves to unlock Game 3!');
   }
