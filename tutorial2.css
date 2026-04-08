@@ -1,0 +1,662 @@
+/* =====================================================
+   ATCKR — Cybertower Frenzy Tutorial
+   Stylesheet: tutorial2.css
+   Matches the dark ATCKR hacker theme with
+   cyan #00e5ff accent matching cyberdefense.css
+   ===================================================== */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #0d1b2a;
+  --surface: #0f2235;
+  --card:    #112438;
+  --border:  rgba(0,229,255,0.18);
+  --cyan:    #00e5ff;
+  --green:   #39ff14;
+  --red:     #ff4757;
+  --amber:   #ffd32a;
+  --purple:  #a55eea;
+  --text:    #e0f7fa;
+  --muted:   #6b8fa8;
+  --mono:    'Share Tech Mono', monospace;
+  --display: 'Fredoka One', cursive;
+  --body:    'Nunito', sans-serif;
+}
+
+html, body {
+  min-height: 100vh;
+  background: var(--bg);
+  font-family: var(--body);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+canvas#particles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.3;
+}
+
+#app {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px 60px;
+}
+
+/* =====================================================
+   SLIDE SYSTEM
+   ===================================================== */
+.slide {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  max-width: 600px;
+  animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.slide.active { display: flex; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: scale(0.94) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Badge */
+.slide-badge {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--cyan);
+  letter-spacing: 0.15em;
+  border: 1px solid var(--border);
+  padding: 4px 14px;
+  border-radius: 4px;
+  margin-bottom: 18px;
+}
+
+/* Icons */
+.slide-icon { font-size: 4rem; margin-bottom: 12px; animation: floatBob 3s ease-in-out infinite; }
+.end-icon   { font-size: 4rem; margin-bottom: 12px; animation: trophyDrop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* Titles */
+.slide-title {
+  font-family: var(--display);
+  font-size: clamp(2rem, 7vw, 3rem);
+  color: #fff;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+.slide-title.small { font-size: clamp(1.5rem, 5vw, 2.2rem); }
+.slide-title .cyan { color: var(--cyan); text-shadow: 0 0 20px rgba(0,229,255,0.5); }
+.cyan { color: var(--cyan); }
+
+/* Subtitle */
+.slide-sub {
+  font-size: 0.92rem;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 20px;
+  max-width: 460px;
+}
+
+/* Auto-advance progress bar */
+.auto-bar-wrap {
+  width: 100%;
+  max-width: 320px;
+  height: 3px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 16px 0 12px;
+}
+.auto-bar {
+  height: 100%;
+  width: 0%;
+  background: var(--cyan);
+  border-radius: 2px;
+  box-shadow: 0 0 6px rgba(0,229,255,0.6);
+  transition: none;
+}
+.auto-bar.running {
+  transition: width linear;
+}
+
+/* Skip button */
+.btn-skip {
+  background: transparent;
+  border: 0.5px solid var(--border);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  padding: 6px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-skip:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* =====================================================
+   DOT INDICATORS
+   ===================================================== */
+.dots {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.dot.active {
+  background: var(--cyan);
+  box-shadow: 0 0 8px rgba(0,229,255,0.6);
+  width: 24px;
+  border-radius: 4px;
+}
+
+/* =====================================================
+   SLIDE 1 — FAKE GAME GRID
+   ===================================================== */
+.game-preview {
+  width: 100%;
+  max-width: 540px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 10px;
+  position: relative;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.fake-grid {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  background: #0f2035;
+  border-radius: 8px;
+  border: 1px solid rgba(0,229,255,0.1);
+  overflow: hidden;
+}
+
+/* Path line drawn with CSS */
+.fake-path-line {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 60%;
+  height: 36px;
+  background: #1e3d5c;
+  transform: translateY(-50%);
+  border-top: 1px dashed rgba(0,229,255,0.3);
+  border-bottom: 1px dashed rgba(0,229,255,0.3);
+}
+
+.fake-enemy {
+  position: absolute;
+  font-size: 1.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  animation: walkRight 3s linear infinite;
+}
+#fe1 { left: 5%; animation-delay: 0s; }
+#fe2 { left: 15%; animation-delay: -1.5s; }
+
+@keyframes walkRight {
+  from { left: 5%; }
+  to   { left: 55%; }
+}
+
+.fake-computer {
+  position: absolute;
+  font-size: 2rem;
+  right: 10%;
+  top: 50%;
+  transform: translateY(-50%);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.fake-start {
+  position: absolute;
+  font-size: 1.4rem;
+  left: 1%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Arrow labels */
+.arrow-label {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  animation: arrowPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes arrowPulse {
+  0%, 100% { opacity: 1; transform: translateY(0); }
+  50%       { opacity: 0.7; transform: translateY(-3px); }
+}
+
+#arr-path { top: 8px; left: 28%; }
+#arr-comp { bottom: 8px; right: 12%; }
+
+.arrow-text {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--cyan);
+  background: rgba(0,229,255,0.1);
+  border: 1px solid rgba(0,229,255,0.3);
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.arrow-line {
+  width: 2px;
+  height: 20px;
+  background: var(--cyan);
+  position: relative;
+}
+
+.arrow-line.down::after {
+  content: '▼';
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  color: var(--cyan);
+}
+
+.arrow-line.up::before {
+  content: '▲';
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  color: var(--cyan);
+}
+
+/* =====================================================
+   SLIDE 2 — SIDEBAR + GRID
+   ===================================================== */
+.fake-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  padding-right: 80px;
+}
+
+.fake-card {
+  background: rgba(255,255,255,0.035);
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 140px;
+  transition: all 0.2s;
+}
+
+.fake-card.highlighted {
+  border-color: var(--cyan);
+  background: rgba(0,229,255,0.08);
+  box-shadow: 0 0 12px rgba(0,229,255,0.2);
+  animation: cardGlow 1.5s ease-in-out infinite;
+}
+
+@keyframes cardGlow {
+  0%, 100% { box-shadow: 0 0 12px rgba(0,229,255,0.2); }
+  50%       { box-shadow: 0 0 24px rgba(0,229,255,0.5); }
+}
+
+.fc-emoji { font-size: 1.4rem; }
+.fc-name  { font-family: var(--mono); font-size: 0.72rem; color: var(--text); }
+.fc-cost  { font-size: 0.65rem; color: var(--amber); margin-left: auto; }
+
+.arrow-label.side {
+  position: absolute;
+  right: -10px;
+  top: 0;
+  flex-direction: row;
+  gap: 6px;
+  align-items: center;
+}
+
+.arrow-line.left {
+  width: 20px;
+  height: 2px;
+  background: var(--cyan);
+  position: relative;
+}
+
+.arrow-line.left::before {
+  content: '◀';
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.55rem;
+  color: var(--cyan);
+}
+
+.fake-grid-small {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.fake-tile {
+  width: 60px;
+  height: 60px;
+  background: #0f2035;
+  border: 1px solid rgba(0,229,255,0.1);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+
+.fake-tile.green-glow {
+  border-color: var(--green);
+  background: rgba(57,255,20,0.08);
+  color: var(--green);
+  font-size: 0.55rem;
+}
+
+.fake-tile.pulse { animation: tilePulse 1.2s ease-in-out infinite; }
+
+@keyframes tilePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(57,255,20,0.4); }
+  50%       { box-shadow: 0 0 0 6px rgba(57,255,20,0); }
+}
+
+/* =====================================================
+   SLIDE 3 — PLACEMENT DEMO
+   ===================================================== */
+.fake-placement-demo {
+  position: relative;
+  width: 100%;
+}
+
+.placement-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 80px);
+  grid-template-rows: repeat(3, 70px);
+  gap: 4px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.ptile {
+  background: #0f2035;
+  border: 1px solid rgba(0,229,255,0.1);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.ptile.path { background: #1e3d5c; border-color: rgba(0,229,255,0.2); }
+
+.ptile.selected-tile {
+  border-color: var(--cyan);
+  background: rgba(0,229,255,0.1);
+  box-shadow: 0 0 14px rgba(0,229,255,0.3);
+}
+
+.ptile-tower { font-size: 2rem; }
+
+/* Range ring visualization */
+.range-ring {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(0,229,255,0.35);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: ringPulse 2s ease-in-out infinite;
+}
+
+@keyframes ringPulse {
+  0%, 100% { opacity: 0.35; }
+  50%       { opacity: 0.7; }
+}
+
+.placement-arrows {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 8px;
+}
+
+.place-arrow, .range-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  animation: arrowPulse 1.5s ease-in-out infinite;
+}
+
+.arrow-line.down-right, .arrow-line.down-left {
+  width: 2px;
+  height: 20px;
+  background: var(--cyan);
+  position: relative;
+}
+
+.arrow-line.down-right::before {
+  content: '▲';
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  color: var(--cyan);
+}
+
+.arrow-line.down-left::before {
+  content: '▲';
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  color: var(--cyan);
+}
+
+/* Walking enemy demo */
+.demo-enemy {
+  position: absolute;
+  font-size: 1.4rem;
+  top: 20px;
+  left: 10px;
+  animation: demoWalk 3s linear infinite;
+}
+
+@keyframes demoWalk {
+  0%   { left: 10px; opacity: 1; }
+  60%  { left: 100px; opacity: 1; }
+  80%  { left: 120px; opacity: 0; }
+  100% { left: 10px; opacity: 0; }
+}
+
+.demo-projectile {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cyan);
+  top: 35px;
+  opacity: 0;
+  animation: demoShoot 3s linear infinite;
+  box-shadow: 0 0 8px rgba(0,229,255,0.8);
+}
+
+@keyframes demoShoot {
+  0%   { left: 130px; opacity: 0; }
+  55%  { left: 130px; opacity: 0; }
+  60%  { left: 130px; opacity: 1; }
+  75%  { left: 80px; opacity: 1; }
+  80%  { left: 70px; opacity: 0; }
+  100% { left: 70px; opacity: 0; }
+}
+
+/* =====================================================
+   SLIDE 4 — MATCH GRID
+   ===================================================== */
+.match-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 12px;
+}
+
+.match-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 16px;
+  animation: matchFadeIn 0.4s ease both;
+}
+
+.match-row:nth-child(1) { animation-delay: 0.0s; }
+.match-row:nth-child(2) { animation-delay: 0.15s; }
+.match-row:nth-child(3) { animation-delay: 0.3s; }
+.match-row:nth-child(4) { animation-delay: 0.45s; }
+
+@keyframes matchFadeIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.match-enemy {
+  font-family: var(--body);
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--text);
+  flex: 1;
+  text-align: left;
+}
+
+.match-arrow {
+  font-size: 1.2rem;
+  color: var(--cyan);
+  font-weight: 900;
+}
+
+.match-tower {
+  font-family: var(--body);
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--cyan);
+  flex: 1;
+  text-align: right;
+}
+
+/* =====================================================
+   END SCREEN
+   ===================================================== */
+.end-btns {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.btn-replay {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  padding: 12px 26px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-replay:hover { border-color: var(--cyan); color: var(--cyan); }
+
+.btn-play {
+  background: var(--cyan);
+  color: #001a22;
+  border: none;
+  font-family: var(--display);
+  font-size: 1.1rem;
+  padding: 14px 40px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+  animation: pulse 2s 0.5s infinite;
+}
+.btn-play::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%);
+  animation: shimmer 2s ease infinite;
+}
+.btn-play:hover { background: #00b8cc; transform: scale(1.05); }
+
+/* =====================================================
+   KEYFRAMES
+   ===================================================== */
+@keyframes floatBob {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+@keyframes trophyDrop {
+  from { transform: scale(0) rotate(-20deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0); opacity: 1; }
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0,229,255,0.4); }
+  50%       { box-shadow: 0 0 0 8px rgba(0,229,255,0); }
+}
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Play — Cybertower Frenzy | ATCKR</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tutorial2.css">
+</head>
+<body>
+<canvas id="particles"></canvas>
+<div id="app">
+
+  <!-- ===== INTRO SLIDE ===== -->
+  <div class="slide active" id="slide-0">
+    <div class="slide-badge">ATCKR // TUTORIAL · GAME 2</div>
+    <div class="slide-icon">🛡️</div>
+    <h1 class="slide-title">Cybertower <span class="cyan">Frenzy</span></h1>
+    <p class="slide-sub">Quick tutorial — learn how to defend your computer<br>from malware in under 30 seconds!</p>
+    <div class="auto-bar-wrap">
+      <div class="auto-bar" id="auto-bar-0"></div>
+    </div>
+    <button class="btn-skip" onclick="skipTutorial()">Skip Tutorial →</button>
+  </div>
+
+  <!-- ===== SLIDE 1: The Map ===== -->
+  <div class="slide" id="slide-1">
+    <div class="slide-badge">STEP 1 OF 4</div>
+    <h2 class="slide-title small">The Map</h2>
+    <p class="slide-sub">Enemies walk along the <span class="cyan">glowing blue path</span> toward your computer. You need to stop them!</p>
+    <div class="game-preview" id="preview-1">
+      <!-- Fake game grid -->
+      <div class="fake-grid" id="fake-grid-1">
+        <div class="fake-path-line"></div>
+        <div class="fake-enemy" id="fe1">🐛</div>
+        <div class="fake-enemy" id="fe2" style="opacity:.6">🎣</div>
+        <div class="fake-computer">🖥️</div>
+        <div class="fake-start">⚠️</div>
+        <!-- Arrow pointing to path -->
+        <div class="arrow-label" id="arr-path">
+          <div class="arrow-line down"></div>
+          <div class="arrow-text">Enemies walk this path!</div>
+        </div>
+        <!-- Arrow pointing to computer -->
+        <div class="arrow-label" id="arr-comp">
+          <div class="arrow-text">Protect this!</div>
+          <div class="arrow-line up"></div>
+        </div>
+      </div>
+    </div>
+    <div class="auto-bar-wrap">
+      <div class="auto-bar" id="auto-bar-1"></div>
+    </div>
+    <button class="btn-skip" onclick="skipTutorial()">Skip Tutorial →</button>
+  </div>
+
+  <!-- ===== SLIDE 2: Sidebar Towers ===== -->
+  <div class="slide" id="slide-2">
+    <div class="slide-badge">STEP 2 OF 4</div>
+    <h2 class="slide-title small">Pick a Defense</h2>
+    <p class="slide-sub">Click a <span class="cyan">tower card</span> in the sidebar to select it. Each tower stops different threats!</p>
+    <div class="game-preview">
+      <div class="fake-sidebar">
+        <div class="fake-card highlighted" id="fc-firewall">
+          <span class="fc-emoji">🧱</span>
+          <div class="fc-name">Firewall</div>
+          <div class="fc-cost">💰 30</div>
+        </div>
+        <div class="fake-card" id="fc-antivirus">
+          <span class="fc-emoji">🔍</span>
+          <div class="fc-name">Antivirus</div>
+          <div class="fc-cost">💰 45</div>
+        </div>
+        <div class="fake-card" id="fc-vpn">
+          <span class="fc-emoji">🔐</span>
+          <div class="fc-name">VPN Shield</div>
+          <div class="fc-cost">💰 90</div>
+        </div>
+        <!-- Animated arrow -->
+        <div class="arrow-label side" id="arr-sidebar">
+          <div class="arrow-line left"></div>
+          <div class="arrow-text">Click a card here!</div>
+        </div>
+      </div>
+      <div class="fake-grid-small">
+        <div class="fake-tile green-glow pulse">Place here!</div>
+        <div class="fake-tile"></div>
+        <div class="fake-tile"></div>
+        <div class="fake-tile green-glow pulse">Place here!</div>
+      </div>
+    </div>
+    <div class="auto-bar-wrap">
+      <div class="auto-bar" id="auto-bar-2"></div>
+    </div>
+    <button class="btn-skip" onclick="skipTutorial()">Skip Tutorial →</button>
+  </div>
+
+  <!-- ===== SLIDE 3: Place Tower ===== -->
+  <div class="slide" id="slide-3">
+    <div class="slide-badge">STEP 3 OF 4</div>
+    <h2 class="slide-title small">Place Your Tower</h2>
+    <p class="slide-sub">After selecting a tower, click any <span class="cyan">green tile</span> on the map to place it. Towers automatically shoot enemies in range!</p>
+    <div class="game-preview">
+      <div class="fake-placement-demo" id="place-demo">
+        <div class="placement-grid">
+          <div class="ptile path"></div>
+          <div class="ptile"></div>
+          <div class="ptile selected-tile">
+            <span class="ptile-tower">🧱</span>
+            <div class="range-ring"></div>
+          </div>
+          <div class="ptile path"></div>
+          <div class="ptile path"></div>
+          <div class="ptile"></div>
+          <div class="ptile path"></div>
+          <div class="ptile"></div>
+          <div class="ptile"></div>
+        </div>
+        <div class="placement-arrows">
+          <div class="arrow-label place-arrow">
+            <div class="arrow-text">Tower placed here!</div>
+            <div class="arrow-line down-right"></div>
+          </div>
+          <div class="arrow-label range-arrow">
+            <div class="arrow-line down-left"></div>
+            <div class="arrow-text">Shoots enemies in this range!</div>
+          </div>
+        </div>
+        <!-- Animated enemy walking into range -->
+        <div class="demo-enemy" id="demo-enemy">🐛</div>
+        <div class="demo-projectile" id="demo-proj"></div>
+      </div>
+    </div>
+    <div class="auto-bar-wrap">
+      <div class="auto-bar" id="auto-bar-3"></div>
+    </div>
+    <button class="btn-skip" onclick="skipTutorial()">Skip Tutorial →</button>
+  </div>
+
+  <!-- ===== SLIDE 4: Match Towers to Enemies ===== -->
+  <div class="slide" id="slide-4">
+    <div class="slide-badge">STEP 4 OF 4</div>
+    <h2 class="slide-title small">Match Your Defenses!</h2>
+    <p class="slide-sub">Each tower only stops <span class="cyan">certain enemies</span>. Use the right tower for the right threat!</p>
+    <div class="match-grid">
+      <div class="match-row">
+        <div class="match-enemy">🐛 Worm</div>
+        <div class="match-arrow">→</div>
+        <div class="match-tower">🧱 Firewall</div>
+      </div>
+      <div class="match-row">
+        <div class="match-enemy">🕵️ Spyware</div>
+        <div class="match-arrow">→</div>
+        <div class="match-tower">🔍 Antivirus</div>
+      </div>
+      <div class="match-row">
+        <div class="match-enemy">🔒 Ransomware</div>
+        <div class="match-arrow">→</div>
+        <div class="match-tower">🔐 VPN Shield</div>
+      </div>
+      <div class="match-row">
+        <div class="match-enemy">🎣 Phishing</div>
+        <div class="match-arrow">→</div>
+        <div class="match-tower">🧱 Firewall</div>
+      </div>
+    </div>
+    <div class="auto-bar-wrap">
+      <div class="auto-bar" id="auto-bar-4"></div>
+    </div>
+    <button class="btn-skip" onclick="skipTutorial()">Skip Tutorial →</button>
+  </div>
+
+  <!-- ===== END SCREEN ===== -->
+  <div class="slide" id="slide-end">
+    <div class="end-icon">✅</div>
+    <div class="slide-badge">TUTORIAL COMPLETE</div>
+    <h2 class="slide-title">You're Ready!</h2>
+    <p class="slide-sub">You know how to place towers, pick the right defense,<br>and protect your computer from malware. Good luck!</p>
+    <div class="end-btns">
+      <button class="btn-replay" onclick="replayTutorial()">↺ Watch Again</button>
+      <button class="btn-play"   onclick="startGame()">▶ Start Game!</button>
+    </div>
+  </div>
+
+  <!-- Dot indicators -->
+  <div class="dots" id="dots">
+    <div class="dot active" onclick="goSlide(0)"></div>
+    <div class="dot" onclick="goSlide(1)"></div>
+    <div class="dot" onclick="goSlide(2)"></div>
+    <div class="dot" onclick="goSlide(3)"></div>
+    <div class="dot" onclick="goSlide(4)"></div>
+  </div>
+
+</div>
+<script src="tutorial2.js"></script>
+</body>
+</html>
