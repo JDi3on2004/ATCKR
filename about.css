@@ -237,3 +237,92 @@ footer {
 
 }
  
+
+/* =====================================================
+   MOBILE RESPONSIVENESS
+   Everything above this line is the original unchanged
+   code. Only these media queries are new additions.
+===================================================== */
+
+/* --- Tablet (≤768px) --- */
+@media (max-width: 768px) {
+
+    .container {
+        grid-template-columns: auto 1fr;
+        padding: 10px 16px;
+    }
+
+    .logo { height: 80px; }
+
+    nav { grid-column: 2; }
+
+    nav ul { gap: 18px; }
+
+    nav a { font-size: 0.82rem; }
+
+    .about { padding: 30px 16px 60px; }
+
+    .about-container { padding: 0 10px; }
+
+    .about-container > h1 { font-size: 1.6rem; }
+
+    .developer-grid {
+        gap: 16px;
+        max-width: 100%;
+    }
+
+    .developer-card {
+        padding: 24px 16px;
+    }
+
+    .description {
+        max-width: 100%;
+        padding-top: 24px;
+    }
+}
+
+/* --- Phone (≤480px) --- */
+@media (max-width: 480px) {
+
+    .container { padding: 8px 12px; }
+
+    .logo { height: 55px; }
+
+    nav ul {
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    nav a { font-size: 0.68rem; }
+
+    .about { padding: 20px 12px 50px; }
+
+    .about-container > h1 { font-size: 1.3rem; }
+
+    .about-container > p { font-size: 0.85rem; margin-bottom: 24px; }
+
+    /* Stack developer cards to single column on small phones */
+    .developer-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-bottom: 32px;
+    }
+
+    .developer-card {
+        padding: 20px 16px;
+        border-radius: 14px;
+    }
+
+    .developer-card h2 { font-size: 0.95rem; }
+
+    .developer-card h3 { font-size: 0.72rem; }
+
+    .description h1 { font-size: 1.1rem; }
+
+    .description h2 { font-size: 1rem; margin-top: 24px; }
+
+    .description p { font-size: 0.85rem; }
+
+    .copyright { font-size: 0.78rem; }
+}
