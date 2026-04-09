@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Final Quiz | ATCKR</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="finalquiz.css">
+</head>
+<body>
+<canvas id="particles"></canvas>
+<div id="app">
+
+  <!-- ===== INTRO ===== -->
+  <div id="s-intro" class="screen active">
+    <div class="final-badge">ATCKR // FINAL MISSION</div>
+    <div class="intro-icon">🎓</div>
+    <h1 class="intro-title">Final <span class="gold">Quiz</span></h1>
+    <p class="intro-sub">You've trained hard. Now prove everything you've learned.<br>Pass this quiz to earn your <span class="gold">ATCKR Certificate</span>!</p>
+
+    <div class="topics-row">
+      <div class="topic-chip">📱 Phishing</div>
+      <div class="topic-chip">🛡️ Cyber Defense</div>
+      <div class="topic-chip">📚 Vocabulary</div>
+    </div>
+
+    <div class="rules-grid">
+      <div class="rule-box">
+        <div class="rule-icon">❓</div>
+        <div class="rule-text">10 questions</div>
+      </div>
+      <div class="rule-box">
+        <div class="rule-icon">💡</div>
+        <div class="rule-text">3 hints total</div>
+      </div>
+      <div class="rule-box">
+        <div class="rule-icon">✅</div>
+        <div class="rule-text">7/10 to pass</div>
+      </div>
+      <div class="rule-box">
+        <div class="rule-icon">🏆</div>
+        <div class="rule-text">Certificate at the end</div>
+      </div>
+    </div>
+
+    <div class="name-section">
+      <label class="name-label">Enter your name for the certificate:</label>
+      <input type="text" id="studentName" class="name-input" placeholder="Your full name" maxlength="40">
+    </div>
+
+    <button class="btn-start" onclick="startQuiz()">🚀 Begin Final Mission</button>
+  </div>
+
+  <!-- ===== QUIZ ===== -->
+  <div id="s-quiz" class="screen">
+
+    <div class="quiz-topbar">
+      <div class="q-counter" id="qCounter">Q1 / 10</div>
+      <div class="prog-wrap">
+        <div class="prog-fill" id="progFill" style="width:0%"></div>
+      </div>
+      <div class="hints-left" id="hintsLeft">
+        <span class="hint-icon">💡</span>
+        <span id="hintCount">3</span> hints left
+      </div>
+    </div>
+
+    <div class="topic-tag" id="topicTag">📱 Phishing</div>
+
+    <div class="q-card" id="qCard">
+      <div class="q-img" id="qImg">🎣</div>
+      <div class="q-text" id="qText">Loading...</div>
+      <div class="choices" id="choices"></div>
+      <button class="btn-hint" id="btnHint" onclick="useHint()">
+        💡 Use a Hint <span class="hint-badge" id="hintBadge">3</span>
+      </button>
+      <div class="hint-box" id="hintBox"></div>
+      <div class="feedback-msg" id="feedbackMsg"></div>
+    </div>
+
+    <div class="score-live">Score: <span id="liveScore">0</span> / 10</div>
+  </div>
+
+  <!-- ===== RESULTS ===== -->
+  <div id="s-results" class="screen">
+    <div class="res-icon" id="resIcon">🏆</div>
+    <div class="final-badge" id="resBadge">FINAL MISSION // COMPLETE</div>
+    <h2 class="res-title" id="resTitle">Mission Accomplished!</h2>
+    <p class="res-sub" id="resSub">You passed the ATCKR Final Quiz!</p>
+
+    <div class="score-ring" id="scoreRing">
+      <div class="score-ring-num" id="scoreRingNum">0/10</div>
+      <div class="score-ring-label">Final Score</div>
+    </div>
+
+    <div class="breakdown">
+      <div class="bd-item">
+        <div class="bd-num" id="bdPhishing">0/4</div>
+        <div class="bd-lbl">📱 Phishing</div>
+      </div>
+      <div class="bd-item">
+        <div class="bd-num" id="bdDefense">0/3</div>
+        <div class="bd-lbl">🛡️ Defense</div>
+      </div>
+      <div class="bd-item">
+        <div class="bd-num" id="bdVocab">0/3</div>
+        <div class="bd-lbl">📚 Vocab</div>
+      </div>
+      <div class="bd-item">
+        <div class="bd-num" id="bdHints">0</div>
+        <div class="bd-lbl">💡 Hints used</div>
+      </div>
+    </div>
+
+    <div class="res-btns" id="resBtns"></div>
+  </div>
+
+</div>
+<div class="combo" id="combo"></div>
+<script src="finalquiz.js"></script>
+</body>
+</html>
