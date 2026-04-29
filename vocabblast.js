@@ -6,7 +6,54 @@
    vocab matching, score tracking, streak system,
    audio, and screen navigation for Vocab Blast.
 ===================================================== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
+const firebaseConfig = {
+  apiKey: "AIzaSyD_XcFPJnBqu95_YjWTRsjkWnwU5wHlA-s",
+  authDomain: "atckr-c6d3d.firebaseapp.com",
+  projectId: "atckr-c6d3d",
+  storageBucket: "atckr-c6d3d.firebasestorage.app",
+  messagingSenderId: "834010699386",
+  appId: "1:834010699386:web:04134df603f29119010dc3",
+  measurementId: "G-SHF21PMJ8R"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let scoreSaved = false;
+
+async function saveGameScoreToProfile(stars, survived, pct) {
+  const user = auth.currentUser;
+  if (!user || scoreSaved) return;
+
+  try {
+    await addDoc(collection(db, "users", user.uid, "gameScores"), {
+      game: "Vocab Blast",
+      score: G.score,
+      correct: G.correct,
+      total: G.queue.length,
+      stars: stars,
+      bestStreak: G.best,
+      missed: G.missed,
+      bonus: G.bonus,
+      passed: survived && pct >= 0.6,
+      createdAt: serverTimestamp()
+    });
+
+    scoreSaved = true;
+  } catch (error) {
+    console.error("Could not save Vocab Blast score:", error);
+  }
+}
 
 /* -------------------------------------------------------
    VOCAB DATA
@@ -243,6 +290,8 @@ function showScreen(id) {
    Called by the Start button on the intro screen.
 ------------------------------------------------------- */
 function startGame() {
+  scoreSaved = false;
+  
   Object.assign(G, {
     lives: 3, score: 0, streak: 0, best: 0,
     correct: 0, missed: 0, bonus: 0,
@@ -407,9 +456,16 @@ function update(dt) {
 
     for (const v of G.viruses) {
       if (!v.alive) continue;
-      if (Math.abs(b.x - v.xDraw) < 42 && Math.abs(b.y - v.y) < 32) {
+      // --- Fixes hitbox to be textbox as collision
+      if (
+        v.bubble &&
+        b.x > v.bubble.x &&
+        b.x < v.bubble.x + v.bubble.w &&
+        b.y > v.bubble.y &&
+        b.y < v.bubble.y + v.bubble.h) {
         b.alive = false;
         v.alive = false;
+
         if (v.isCorrect) {
           // ✅ Correct hit
           G.correct++;
@@ -512,8 +568,8 @@ function draw() {
     ctx.textBaseline = 'middle';
     ctx.fillText(v.emoji, vx, v.y - 2);
 
-    // Definition text bubble
-    drawBubble(vx, v.y + 24, v.text, v.isCorrect);
+    // Definition hitbox bubble
+    v.bubble = drawBubble(vx, v.y + 24, v.text, v.isCorrect);
   }
 
   // --- Bullets ---
@@ -549,17 +605,24 @@ function drawBubble(cx, topY, text, isCorrect) {
   const bh    = lines.length * lh + pad * 2;
   const bw    = maxW + pad * 2;
 
+  const x = cx -bw / 2;
+  const y = topY;
+
   ctx.fillStyle   =  'rgba(10,20,35,0.9)' ;
   ctx.strokeStyle = 'rgba(0,299,255,0.4)' ;
   ctx.lineWidth   = 1;
-  rr(cx - bw / 2, topY, bw, bh, 8);
-  ctx.fill(); ctx.stroke();
+
+  rr(x, y, bw, bh, 8);
+  ctx.fill(); 
+  ctx.stroke();
 
   ctx.fillStyle    =  '#e2e8f0';
   ctx.font         = '600 0.6rem Nunito, sans-serif';
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'top';
   lines.forEach((line, i) => ctx.fillText(line, cx, topY + pad + i * lh));
+  
+  return {x, y, w: bw, h: bh };
 }
 
 /* Draws the stylised computer/monitor player at the bottom */
@@ -739,7 +802,7 @@ function spawnConfetti() {
    Calculates stars, populates results screen,
    saves to localStorage — mirrors game1 & game2.
 ------------------------------------------------------- */
-function endGame() {
+async function endGame() {
   G.gameOver = true;
   if (animId) cancelAnimationFrame(animId);
 
@@ -774,11 +837,13 @@ function endGame() {
   localStorage.setItem('game3_score',  G.score);
   localStorage.setItem('game3_stars',  stars);
 
+  await saveGameScoreToProfile(stars, survived, pct);
+
   showScreen('s-results');
 }
 
-function goHome() {
-  window.location.href = 'index.html';
+function quiz() {
+  window.location.href = 'finalquiz.html';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -787,4 +852,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Nothing else needed here.
 });
 
+window.startGame = startGame;
+window.quiz = quiz;
 // This program was made to some degree with Claude. Human coding was added for effects and to ensure accuracy.
